@@ -37,22 +37,25 @@ Sr_cl = Sr_cl.'; % flip to row vector
 
 E = 200E9; % average modulus for carbon steel (Pa)
 
-Syc = (pi^2)*E./(Sr_cl.^2); % Compressive yield strength (Pa)
-SrD = pi*sqrt(2*E./Syc); % mid point of Euler-Johnson curve
+Syc = [179E6 207E6 259E6 276E6 303E6 393E6 441E6 462E6]; 
+%list of material properties from table A9. 
+%Order is: Hot rolled 1010,1020,1030,1040- Cold rolled 1010,1020,1030,1040
+SrD = pi*sqrt(2*E./Syc); % mid point of Euler-Johnson curve (not needed?)
 
-% critical load from force balance is F, Pcr is plotted curve of critical
+% load from force balance is F, Pcr is plotted curve of critical
 % loads by area vector
-Pcr = (Syc-1/E.*((Syc.*Sr_cl)/(2*pi)).^2).*A; % Johnson equation 4.43
+for i=1:8
+    Pcr(i) = (Syc(i)-1/E*((Syc(i)*Sr_cl(i))/(2*pi))^2)*A(i) % Johnson equation 4.43
+end
 
-plot(r,Pcr)
+plot(d,Pcr)
 hold on
-line([0,r(8)],[F,F])
+line([d(1),d(8)],[F,F])
 xlabel('radius (m)')
 ylabel('Critical Load (N)')
-title('Critical load by radius for Johnson Column')
+title('Critical load by diameter for Johnson Column')
+xlim([min(d) max(d)])
 
-%from the plot above, we see that the critical load and the radius
-%intersect at about 0.016 meters.
 
 
 %% Creating the FoS by diameter plot
@@ -64,6 +67,7 @@ plot(d,FoS)
 xlabel('diameter (m)')
 ylabel('Buckling Factor of safety')
 title('Factor of Safety by diameter')
+xlim([min(d) max(d)])
 
 figure(3)
 plot(d,FoS)
@@ -71,21 +75,4 @@ xlabel('diameter (m)')
 ylabel('Buckling Factor of safety')
 title('Factor of Safety by diameter (zoomed)')
 ylim([1.2 2])
-
-%% Using the radius found above
-
-r_true = 0.016; % (m)
-d_true = r_true*2/.0254; % (in)
-A_true = pi*r_true^2; % (m^2)
-I_true = pi*r_true^4; % second moment of area (m^4)
-k_true = sqrt(I/A); % radius of gyration (m)
-
-
-Sr_true = leff/k_true; %actual slenderness ratio
-Syc_true = (pi^2)*E/(Sr_true^2); %137 MPa
-SrD_true = pi*sqrt(2*E/Syc_true);
-
-stress_true = F/A_true; % 91.7 MPA
-
-FoS = Syc_true/stress_true % Fos =~ 1.5
-
+xlim([.043 .046])
