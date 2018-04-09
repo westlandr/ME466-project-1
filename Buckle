@@ -1,0 +1,91 @@
+clc, clear all, clear home, format short, format compact
+%% Buckling
+% ME466 - Project 1 - Group 27 
+%(Daniel Howard, Nick Hassler, Josiah Chan, Richard Estey)
+
+%% Slenderness Ratio
+
+F = 7.3738e+04; % from force balance
+l = 3.4; % length of column (m)
+d = .00635:0.00635:0.0508;% radius of column (m)
+r = d./2; % radius vector
+
+A = pi*r.^2; % cross sectional area (m^2)
+I = pi*r.^4; % second moment of area (m^4)
+k = zeros(8,1);
+
+i=1;
+for i = 1:8
+    k(i) = sqrt(I(i)/A(i));
+end
+
+Sr = l./k; %slenderness ratio
+
+%% Boundary conditions: Fixed-pinned
+
+% because top of the shaft must be able to rotate to lift the bed, and the
+% bottom of the shaft is trapped by the pressure vessel in two directions,
+% and the load will always be compression.
+
+leff = 0.8*l; % effective length based on AISC recommendation
+Sr_cl = leff./k; % Slenderness ratio for critical loads 
+Sr_cl = Sr_cl.'; % flip to row vector
+
+
+%% Once material is chosen, plot Pcr/A curve Euler/Johnson
+% Our column is in the Johnson region
+
+E = 200E9; % average modulus for carbon steel (Pa)
+
+Syc = (pi^2)*E./(Sr_cl.^2); % Compressive yield strength (Pa)
+SrD = pi*sqrt(2*E./Syc); % mid point of Euler-Johnson curve
+
+% critical load from force balance is F, Pcr is plotted curve of critical
+% loads by area vector
+Pcr = (Syc-1/E.*((Syc.*Sr_cl)/(2*pi)).^2).*A; % Johnson equation 4.43
+
+plot(r,Pcr)
+hold on
+line([0,r(8)],[F,F])
+xlabel('radius (m)')
+ylabel('Critical Load (N)')
+title('Critical load by radius for Johnson Column')
+
+%from the plot above, we see that the critical load and the radius
+%intersect at about 0.016 meters.
+
+
+%% Creating the FoS by diameter plot
+
+FoS = (Pcr./A)./(F./A); % Buckling FoS is P_critical/P_actual
+
+figure(2)
+plot(d,FoS)
+xlabel('diameter (m)')
+ylabel('Buckling Factor of safety')
+title('Factor of Safety by diameter')
+
+figure(3)
+plot(d,FoS)
+xlabel('diameter (m)')
+ylabel('Buckling Factor of safety')
+title('Factor of Safety by diameter (zoomed)')
+ylim([1.2 2])
+
+%% Using the radius found above
+
+r_true = 0.016; % (m)
+d_true = r_true*2/.0254; % (in)
+A_true = pi*r_true^2; % (m^2)
+I_true = pi*r_true^4; % second moment of area (m^4)
+k_true = sqrt(I/A); % radius of gyration (m)
+
+
+Sr_true = leff/k_true; %actual slenderness ratio
+Syc_true = (pi^2)*E/(Sr_true^2); %137 MPa
+SrD_true = pi*sqrt(2*E/Syc_true);
+
+stress_true = F/A_true; % 91.7 MPA
+
+FoS = Syc_true/stress_true % Fos =~ 1.5
+
