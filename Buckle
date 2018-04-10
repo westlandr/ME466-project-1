@@ -6,7 +6,7 @@ clc, clear all, clear home, format short, format compact
 %% Slenderness Ratio
 
 F = 7.3738e+04; % from force balance
-l = 3.4; % length of column (m)
+l = 1.03; % length of column (m)
 d = .00635:0.00635:0.0508;% radius of column (m)
 r = d./2; % radius vector
 
@@ -45,7 +45,7 @@ SrD = pi*sqrt(2*E./Syc); % mid point of Euler-Johnson curve (not needed?)
 % load from force balance is F, Pcr is plotted curve of critical
 % loads by area vector
 for i=1:8
-    Pcr(i) = (Syc(i)-1/E*((Syc(i)*Sr_cl(i))/(2*pi))^2)*A(i) % Johnson equation 4.43
+    Pcr(i) = (Syc(i)-(1/E)*((Syc(i)*Sr_cl(i))/(2*pi))^2)*A(i) % Johnson equation 4.43
 end
 
 plot(d,Pcr)
@@ -68,6 +68,7 @@ xlabel('diameter (m)')
 ylabel('Buckling Factor of safety')
 title('Factor of Safety by diameter')
 xlim([min(d) max(d)])
+ylim([0 max(FoS)])
 
 figure(3)
 plot(d,FoS)
@@ -75,11 +76,10 @@ xlabel('diameter (m)')
 ylabel('Buckling Factor of safety')
 title('Factor of Safety by diameter (zoomed)')
 ylim([1.2 2])
-xlim([.043 .046])
-
+xlim([0.022 0.028])
 %% Using the radius found above
-
-r_true = 0.044/2; % (m)
+clc
+r_true = 0.025/2; % (m)
 d_true = r_true*2/.0254; % (in)
 A_true = pi*r_true^2; % (m^2)
 I_true = pi*r_true^4; % second moment of area (m^4)
@@ -90,7 +90,12 @@ Sr_true = leff/k_true; % actual slenderness ratio
 % Syc_true = (pi^2)*E/(Sr_true^2); NOT NEEDED
 % SrD_true = pi*sqrt(2*E/Syc_true); NOT NEEDED
 
-stress_true = F/A_true % 48.5 MPa
+stress_true = F/A_true; % 150 MPa
+FoS_true = Syc./stress_true %
 
-FoS = Syc./stress_true % 
+for i=1:8
+    Pcr_true(i) = (Syc(i)-(1/E)*((Syc(i)*Sr_true)/(2*pi)).^2)*A_true;
+end
+
+FoS_buckle = Pcr_true./F % 
 
