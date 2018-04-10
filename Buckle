@@ -51,7 +51,7 @@ end
 plot(d,Pcr)
 hold on
 line([d(1),d(8)],[F,F])
-xlabel('radius (m)')
+xlabel('diameter (m)')
 ylabel('Critical Load (N)')
 title('Critical load by diameter for Johnson Column')
 xlim([min(d) max(d)])
@@ -76,3 +76,21 @@ ylabel('Buckling Factor of safety')
 title('Factor of Safety by diameter (zoomed)')
 ylim([1.2 2])
 xlim([.043 .046])
+
+%% Using the radius found above
+
+r_true = 0.044/2; % (m)
+d_true = r_true*2/.0254; % (in)
+A_true = pi*r_true^2; % (m^2)
+I_true = pi*r_true^4; % second moment of area (m^4)
+k_true = sqrt(I_true/A_true); % radius of gyration (m)
+
+
+Sr_true = leff/k_true; % actual slenderness ratio
+% Syc_true = (pi^2)*E/(Sr_true^2); NOT NEEDED
+% SrD_true = pi*sqrt(2*E/Syc_true); NOT NEEDED
+
+stress_true = F/A_true % 48.5 MPa
+
+FoS = Syc./stress_true % 
+
