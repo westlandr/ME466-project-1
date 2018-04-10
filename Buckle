@@ -3,47 +3,53 @@ clc, clear all, clear home, format short, format compact
 % ME466 - Project 1 - Group 27 
 %(Daniel Howard, Nick Hassler, Josiah Chan, Richard Estey)
 
-%% Slenderness Ratio
+%% Assumptions
+% Length of the rod is the exposed length while the bed is
+% tipped. Effective length is calculated using AISC recomendations  
 
-F = 7.3738e+04; % from force balance
-l = 1.03; % length of column (m)
-d = .00635:0.00635:0.0508;% radius of column (m)
-r = d./2; % radius vector
+% The rod is a 'Johnson column" based on the calculations of the
+% slenderness ratio for multiple diameters
 
-A = pi*r.^2; % cross sectional area (m^2)
-I = pi*r.^4; % second moment of area (m^4)
-k = zeros(8,1);
+% The rod will fail due to buckling before it will fail due to compressive
+% stress
 
-i=1;
-for i = 1:8
-    k(i) = sqrt(I(i)/A(i));
-end
-
-Sr = l./k; %slenderness ratio
-
-%% Boundary conditions: Fixed-pinned
-
+% Boundary conditions: Fixed-pinned
 % because top of the shaft must be able to rotate to lift the bed, and the
 % bottom of the shaft is trapped by the pressure vessel in two directions,
-% and the load will always be compression.
+% and the load will always be compression (locking the third direction as
+% well)
+
+% 
+
+%% Constants 
+
+F = 7.3738e+04; % from force balance
+l = 1.03; % length of exposed column (m)
+E = 200E9; % average modulus for carbon steel (Pa)
+
+%% Vectors for calculations
+
+d = .00635:0.00635:0.0508;% radius of column vector (m)
+r = d./2; % radius vector
+A = pi*r.^2; % cross sectional area (m^2)
+I = pi*r.^4; % second moment of area (m^4)
+
+for i = 1:8
+    k(i) = sqrt(I(i)/A(i)); %radius of gyration
+end
+
+Syc = [179E6 207E6 259E6 276E6 303E6 393E6 441E6 462E6]; 
+% list of material properties from table A9. 
+% Order is: Hot rolled 1010,1020,1030,1040- Cold rolled 1010,1020,1030,1040
+% We chose these steels because they are common and relatively inexpensive
+
+%% Calculating effective length and Slenderness ratio for critical loads
 
 leff = 0.8*l; % effective length based on AISC recommendation
 Sr_cl = leff./k; % Slenderness ratio for critical loads 
-Sr_cl = Sr_cl.'; % flip to row vector
 
+%% Calculating and Plotting Critical Loads (Johnson equation)
 
-%% Once material is chosen, plot Pcr/A curve Euler/Johnson
-% Our column is in the Johnson region
-
-E = 200E9; % average modulus for carbon steel (Pa)
-
-Syc = [179E6 207E6 259E6 276E6 303E6 393E6 441E6 462E6]; 
-%list of material properties from table A9. 
-%Order is: Hot rolled 1010,1020,1030,1040- Cold rolled 1010,1020,1030,1040
-SrD = pi*sqrt(2*E./Syc); % mid point of Euler-Johnson curve (not needed?)
-
-% load from force balance is F, Pcr is plotted curve of critical
-% loads by area vector
 for i=1:8
     Pcr(i) = (Syc(i)-(1/E)*((Syc(i)*Sr_cl(i))/(2*pi))^2)*A(i) % Johnson equation 4.43
 end
@@ -55,8 +61,6 @@ xlabel('diameter (m)')
 ylabel('Critical Load (N)')
 title('Critical load by diameter for Johnson Column')
 xlim([min(d) max(d)])
-
-
 
 %% Creating the FoS by diameter plot
 
@@ -77,25 +81,30 @@ ylabel('Buckling Factor of safety')
 title('Factor of Safety by diameter (zoomed)')
 ylim([1.2 2])
 xlim([0.022 0.028])
-%% Using the radius found above
+
+%% Using the radius from Critical load/diameter plot
 clc
-r_true = 0.025/2; % (m)
-d_true = r_true*2/.0254; % (in)
+
+r_true = 0.022/2; % (m)
+d_true = r_true*2; % (m)
 A_true = pi*r_true^2; % (m^2)
 I_true = pi*r_true^4; % second moment of area (m^4)
 k_true = sqrt(I_true/A_true); % radius of gyration (m)
 
 
-Sr_true = leff/k_true; % actual slenderness ratio
-% Syc_true = (pi^2)*E/(Sr_true^2); NOT NEEDED
-% SrD_true = pi*sqrt(2*E/Syc_true); NOT NEEDED
+Sr_true = leff/k_true; % actual slenderness ratio, verifying that its a Johnson Column
 
-stress_true = F/A_true; % 150 MPa
-FoS_true = Syc./stress_true %
+stress_true = F/A_true % 194 MPa
+FoS_compressive = Syc./stress_true %Factor of safety for failure due to compression
 
 for i=1:8
     Pcr_true(i) = (Syc(i)-(1/E)*((Syc(i)*Sr_true)/(2*pi)).^2)*A_true;
 end
+%calculating critical loads based on the different material properties for
+%steel
 
 FoS_buckle = Pcr_true./F % 
+
+
+
 
